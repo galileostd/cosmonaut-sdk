@@ -1,0 +1,345 @@
+syntax = "proto3";
+
+package plugin.v1;
+
+option go_package = "github.com/galileostd/cosmonaut-sdk/go/plugin/v1;pluginv1";
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
+// PluginType categorizes what kind of component a plugin represents.
+enum PluginType {
+  PLUGIN_TYPE_UNSPECIFIED  = 0;
+  PLUGIN_TYPE_QUERY_ENGINE = 1;  // Trino, Dremio — receives SQL, returns results
+  PLUGIN_TYPE_PROCESSING   = 2;  // Spark, Flink, DataFusion — creates pods/CRDs
+  PLUGIN_TYPE_ORCHESTRATION = 3; // Airflow — observability bridge + trigger
+  PLUGIN_TYPE_STORAGE      = 4;  // Ceph, MinIO
+  PLUGIN_TYPE_CATALOG      = 5;  // Polaris, Nessie, Hive
+  PLUGIN_TYPE_STREAMING    = 6;  // Kafka, AutoMQ, Redpanda
+  PLUGIN_TYPE_ML           = 7;  // MLflow, Ray
+  PLUGIN_TYPE_OBSERVABILITY = 8; // Prometheus, Grafana
+  PLUGIN_TYPE_NOTEBOOK     = 9;  // JupyterHub, Marimo
+  PLUGIN_TYPE_BI           = 10; // Superset, Metabase
+  PLUGIN_TYPE_GENERIC      = 99; // anything else
+}
+
+// ExecutionType distinguishes how a plugin executes work.
+enum ExecutionType {
+  EXECUTION_TYPE_UNSPECIFIED = 0;
+
+  // WORKLOAD: creates pods/CRDs in the cluster to process data.
+  // Examples: Spark, Flink, User Pod, DataFusion/Ballista.
+  // Has: submit, kill, logs, metrics, status tied to pod lifecycle.
+  EXECUTION_TYPE_WORKLOAD = 1;
+
+  // QUERY: sends work to a running service that processes it internally.
+  // Examples: Trino, Dremio.
+  // Has: submit query, cancel, results, query stats.
+  // Does NOT create pods.
+  EXECUTION_TYPE_QUERY = 2;
+
+  // OBSERVABILITY: reads state from external systems, does not execute work.
+  // Examples: Airflow (reads DAG runs), OpenMetadata.
+  EXECUTION_TYPE_OBSERVABILITY = 3;
+}
+
+// WorkloadType applies only to EXECUTION_TYPE_WORKLOAD.
+enum WorkloadType {
+  WORKLOAD_TYPE_UNSPECIFIED = 0;
+
+  // BATCH: job runs, completes, and terminates.
+  // Examples: Spark batch job, Flink batch job, Python script.
+  WORKLOAD_TYPE_BATCH = 1;
+
+  // STREAMING: job runs indefinitely, processes continuous data.
+  // Examples: Spark Structured Streaming, Flink CDC, Go Protobuf consumer.
+  // Has additional capabilities: savepoint, restore, consumer lag metrics.
+  WORKLOAD_TYPE_STREAMING = 2;
+}
+
+// HealthState represents the current health of a component.
+enum HealthState {
+  HEALTH_STATE_UNSPECIFIED = 0;
+  HEALTH_STATE_HEALTHY     = 1;
+  HEALTH_STATE_DEGRADED    = 2;
+  HEALTH_STATE_UNHEALTHY   = 3;
+  HEALTH_STATE_UNKNOWN     = 4;
+}
+
+// JobState represents the lifecycle state of a submitted job or query.
+enum JobState {
+  JOB_STATE_UNSPECIFIED = 0;
+  JOB_STATE_PENDING     = 1;
+  JOB_STATE_RUNNING     = 2;
+  JOB_STATE_SUCCEEDED   = 3;
+  JOB_STATE_FAILED      = 4;
+  JOB_STATE_CANCELED    = 5;
+  JOB_STATE_UNKNOWN     = 6;
+}
+
+// ── Common messages ───────────────────────────────────────────────────────────
+
+// Component holds the runtime configuration of a registered component.
+// Passed to every RPC so the plugin knows what it is operating on.
+message Component {
+  // Unique name of this component instance.
+  string name = 1;
+
+  // Kubernetes namespace where this component lives.
+  string namespace = 2;
+
+  // Base URL to reach the component.
+  // For query engines: the HTTP endpoint (e.g. http://trino:8080).
+  // For K8s-native plugins (Spark, Flink): the K8s API server URL or empty.
+  string endpoint = 3;
+
+  // Arbitrary plugin-specific configuration key-value pairs.
+  // Examples:
+  //   Spark:   { "namespace": "spark-operator-v2", "service_account": "spark" }
+  //   Flink:   { "namespace": "da-flink", "workload_type": "streaming" }
+  //   Trino:   { "catalog": "iceberg", "default_schema": "bronze" }
+  //   UserPod: { "namespace": "cosmonaut-jobs", "mode": "deployment" }
+  map<string, string> config = 4;
+}
+
+// Capability describes a single action a plugin supports.
+message Capability {
+  string type        = 1; // e.g. "query", "submit-job", "savepoint"
+  string description = 2;
+}
+
+// ── DescribeService ───────────────────────────────────────────────────────────
+
+message DescribeRequest {}
+
+message DescribeResponse {
+  // Unique plugin identifier. Must be lowercase, hyphen-separated.
+  // Examples: "trino", "spark", "flink", "dremio", "userpod"
+  string plugin_name   = 1;
+
+  // Human-readable name shown in the UI.
+  string display_name  = 2;
+
+  // Plugin version (semver).
+  string version       = 3;
+
+  // Short description of what this plugin integrates.
+  string description   = 4;
+
+  PluginType     plugin_type    = 5;
+  ExecutionType  execution_type = 6;
+
+  // workload_type is set only when execution_type = WORKLOAD.
+  WorkloadType   workload_type  = 7;
+
+  // Capabilities this plugin exposes.
+  repeated Capability capabilities = 8;
+}
+
+// ── HealthService ─────────────────────────────────────────────────────────────
+
+message HealthCheckRequest {
+  Component component = 1;
+}
+
+message HealthCheckResponse {
+  HealthState state   = 1;
+  string      message = 2;
+
+  // Optional structured details (e.g. version, active connections).
+  map<string, string> details = 3;
+}
+
+// ── ExecuteService ────────────────────────────────────────────────────────────
+
+message ExecuteRequest {
+  Component component = 1;
+
+  // Action to perform. Must match one of the plugin's declared capabilities.
+  // Examples: "query", "submit-job", "savepoint", "trigger-dag", "run"
+  string action = 2;
+
+  // Action-specific payload.
+  // Examples:
+  //   query:      { "sql": "SELECT ...", "catalog": "iceberg" }
+  //   submit-job: { "image": "...", "main_class": "...", "args": "..." }
+  //   savepoint:  { "job_id": "...", "target_path": "s3://..." }
+  map<string, string> payload = 3;
+}
+
+message ExecuteResponse {
+  // Opaque ID assigned by the plugin to this execution.
+  // For queries: the engine's internal query ID.
+  // For workloads: the CRD name or K8s Job name.
+  string job_id = 1;
+
+  JobState state = 2;
+
+  // Human-readable message (error details, submission info, etc).
+  string message = 3;
+
+  // Optional structured result data.
+  // For queries: may include initial rows or query stats.
+  // For workloads: may include the created CRD name/namespace.
+  map<string, string> result = 4;
+}
+
+// ── JobService ────────────────────────────────────────────────────────────────
+
+message GetJobRequest {
+  Component component = 1;
+  string    job_id    = 2;
+}
+
+message GetJobResponse {
+  string   job_id    = 1;
+  JobState state     = 2;
+  string   message   = 3;
+
+  // Structured status details.
+  // For workloads: pod phase, restart count, node name.
+  // For queries: rows scanned, bytes processed, wall time ms.
+  map<string, string> details = 4;
+}
+
+message ListJobsRequest {
+  Component component   = 1;
+
+  // Optional filter by state.
+  JobState  state_filter = 2;
+
+  int32 limit  = 3;
+  int32 offset = 4;
+}
+
+message ListJobsResponse {
+  repeated GetJobResponse jobs  = 1;
+  int32                   total = 2;
+}
+
+message CancelJobRequest {
+  Component component = 1;
+  string    job_id    = 2;
+}
+
+message CancelJobResponse {
+  bool   canceled = 1;
+  string message  = 2;
+}
+
+message GetLogsRequest {
+  Component component  = 1;
+  string    job_id     = 2;
+
+  // For workloads with multiple pods (driver + executors), which pod to fetch.
+  // If empty, returns driver/primary logs.
+  string    pod_name   = 3;
+
+  // Maximum number of log lines to return. 0 = no limit.
+  int32     tail_lines = 4;
+}
+
+message GetLogsResponse {
+  repeated string lines = 1;
+}
+
+// ── StreamingService (only for WORKLOAD_TYPE_STREAMING) ──────────────────────
+
+message SavepointRequest {
+  Component component   = 1;
+  string    job_id      = 2;
+
+  // Target path for the savepoint (e.g. s3://bucket/savepoints/).
+  string    target_path = 3;
+
+  // If true, cancel the job after the savepoint completes.
+  bool      cancel_job  = 4;
+}
+
+message SavepointResponse {
+  string savepoint_path = 1;
+  string message        = 2;
+}
+
+message RestoreRequest {
+  Component component     = 1;
+
+  // Full savepoint path to restore from.
+  string    savepoint_path = 2;
+
+  // Original job payload to resubmit (same as ExecuteRequest.payload).
+  map<string, string> payload = 3;
+}
+
+message RestoreResponse {
+  string   job_id  = 1;
+  JobState state   = 2;
+  string   message = 3;
+}
+
+message GetMetricsRequest {
+  Component component = 1;
+  string    job_id    = 2;
+}
+
+message GetMetricsResponse {
+  // Key-value metrics reported by the plugin.
+  // Examples (Flink): { "records_lag_max": "0", "checkpoint_duration_ms": "120" }
+  // Examples (Spark):  { "input_rows": "1000000", "output_rows": "999000" }
+  map<string, string> metrics = 1;
+}
+
+// ── Service definitions ───────────────────────────────────────────────────────
+
+// PluginService is the core gRPC service every Cosmonaut plugin must implement.
+//
+// The control-plane calls these RPCs to interact with any registered plugin.
+// Plugins are discovered automatically via Kubernetes Service labels.
+//
+// Minimum implementation required:
+//   - Describe
+//   - HealthCheck
+//   - Execute
+//
+// Optional (implement based on declared capabilities):
+//   - GetJob, ListJobs, CancelJob, GetLogs  (all plugins that submit work)
+//   - Savepoint, Restore, GetMetrics         (WORKLOAD_TYPE_STREAMING only)
+service PluginService {
+  // Describe returns static metadata about this plugin.
+  // Called once on discovery and periodically to refresh capabilities.
+  rpc Describe(DescribeRequest) returns (DescribeResponse);
+
+  // HealthCheck verifies the component is reachable and operational.
+  // Called periodically by the health controller.
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+
+  // Execute submits work to the component.
+  // Returns immediately with a job_id — execution is always async.
+  // The caller tracks progress via GetJob or the WebSocket event stream.
+  rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+
+  // GetJob returns the current state of a submitted job or query.
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
+
+  // ListJobs returns all jobs/queries known to this component.
+  // Includes jobs submitted by Cosmonaut AND by external systems (Airflow, etc).
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+
+  // CancelJob attempts to cancel a running job or query.
+  rpc CancelJob(CancelJobRequest) returns (CancelJobResponse);
+
+  // GetLogs returns logs for a job. For workloads, returns pod logs.
+  rpc GetLogs(GetLogsRequest) returns (GetLogsResponse);
+
+  // Savepoint triggers a savepoint on a streaming job.
+  // Only valid for WORKLOAD_TYPE_STREAMING plugins.
+  rpc Savepoint(SavepointRequest) returns (SavepointResponse);
+
+  // Restore submits a streaming job from a savepoint.
+  // Only valid for WORKLOAD_TYPE_STREAMING plugins.
+  rpc Restore(RestoreRequest) returns (RestoreResponse);
+
+  // GetMetrics returns runtime metrics for a running job.
+  // For streaming jobs: consumer lag, checkpoint duration, throughput.
+  // For batch jobs: rows processed, bytes read/written.
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+}

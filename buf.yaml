@@ -1,0 +1,11 @@
+version: v2
+modules:
+  - path: proto
+lint:
+  use:
+    - STANDARD
+  except:
+    - PACKAGE_VERSION_SUFFIX  # we use plugin/v1 not plugin_v1
+breaking:
+  use:
+    - FILE
