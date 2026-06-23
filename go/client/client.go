@@ -5,6 +5,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -24,7 +25,16 @@ type Client struct {
 
 // New creates a new plugin client connected to the given endpoint.
 // The endpoint is the gRPC address of the plugin (e.g. "cosmonaut-plugin-trino.cosmonaut:50051").
+// The dns:/// prefix is added automatically to ensure the gRPC DNS resolver
+// is used, which is required for Kubernetes service discovery.
 func New(endpoint string) (*Client, error) {
+	// ensure the dns:/// prefix is present so gRPC uses the DNS resolver
+	// this is required for K8s service DNS to work correctly
+	if !strings.HasPrefix(endpoint, "dns:///") &&
+		!strings.HasPrefix(endpoint, "passthrough:///") {
+		endpoint = "dns:///" + endpoint
+	}
+
 	conn, err := grpc.NewClient(endpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
