@@ -32,7 +32,7 @@ func New(endpoint string) (*Client, error) {
 	// this is required for K8s service DNS to work correctly
 	if !strings.HasPrefix(endpoint, "dns:///") &&
 		!strings.HasPrefix(endpoint, "passthrough:///") {
-		endpoint = "dns:///" + endpoint
+		endpoint = "passthrough:///" + endpoint
 	}
 
 	conn, err := grpc.NewClient(endpoint,
