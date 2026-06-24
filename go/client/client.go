@@ -157,3 +157,10 @@ func (c *Client) GetMetrics(ctx context.Context, component *pluginv1.Component, 
 		JobId:     jobID,
 	})
 }
+
+// GetManifest returns the plugin installation manifest.
+// Used by the UI wizard and CLI installer to guide the operator
+// through installing the plugin and its dependencies.
+func (c *Client) GetManifest(ctx context.Context) (*pluginv1.GetManifestResponse, error) {
+	return c.plugin.GetManifest(ctx, &pluginv1.GetManifestRequest{})
+}
