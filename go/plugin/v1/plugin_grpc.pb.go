@@ -29,6 +29,7 @@ const (
 	PluginService_Savepoint_FullMethodName   = "/plugin.v1.PluginService/Savepoint"
 	PluginService_Restore_FullMethodName     = "/plugin.v1.PluginService/Restore"
 	PluginService_GetMetrics_FullMethodName  = "/plugin.v1.PluginService/GetMetrics"
+	PluginService_GetManifest_FullMethodName = "/plugin.v1.PluginService/GetManifest"
 )
 
 // PluginServiceClient is the client API for PluginService service.
@@ -78,6 +79,10 @@ type PluginServiceClient interface {
 	// For streaming jobs: consumer lag, checkpoint duration, throughput.
 	// For batch jobs: rows processed, bytes read/written.
 	GetMetrics(ctx context.Context, in *GetMetricsRequest, opts ...grpc.CallOption) (*GetMetricsResponse, error)
+	// GetManifest returns the plugin manifest — everything needed to install
+	// and configure this plugin and its dependencies.
+	// Called by the Cosmonaut UI wizard and CLI installer.
+	GetManifest(ctx context.Context, in *GetManifestRequest, opts ...grpc.CallOption) (*GetManifestResponse, error)
 }
 
 type pluginServiceClient struct {
@@ -188,6 +193,16 @@ func (c *pluginServiceClient) GetMetrics(ctx context.Context, in *GetMetricsRequ
 	return out, nil
 }
 
+func (c *pluginServiceClient) GetManifest(ctx context.Context, in *GetManifestRequest, opts ...grpc.CallOption) (*GetManifestResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetManifestResponse)
+	err := c.cc.Invoke(ctx, PluginService_GetManifest_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PluginServiceServer is the server API for PluginService service.
 // All implementations must embed UnimplementedPluginServiceServer
 // for forward compatibility.
@@ -235,6 +250,10 @@ type PluginServiceServer interface {
 	// For streaming jobs: consumer lag, checkpoint duration, throughput.
 	// For batch jobs: rows processed, bytes read/written.
 	GetMetrics(context.Context, *GetMetricsRequest) (*GetMetricsResponse, error)
+	// GetManifest returns the plugin manifest — everything needed to install
+	// and configure this plugin and its dependencies.
+	// Called by the Cosmonaut UI wizard and CLI installer.
+	GetManifest(context.Context, *GetManifestRequest) (*GetManifestResponse, error)
 	mustEmbedUnimplementedPluginServiceServer()
 }
 
@@ -274,6 +293,9 @@ func (UnimplementedPluginServiceServer) Restore(context.Context, *RestoreRequest
 }
 func (UnimplementedPluginServiceServer) GetMetrics(context.Context, *GetMetricsRequest) (*GetMetricsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetMetrics not implemented")
+}
+func (UnimplementedPluginServiceServer) GetManifest(context.Context, *GetManifestRequest) (*GetManifestResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetManifest not implemented")
 }
 func (UnimplementedPluginServiceServer) mustEmbedUnimplementedPluginServiceServer() {}
 func (UnimplementedPluginServiceServer) testEmbeddedByValue()                       {}
@@ -476,6 +498,24 @@ func _PluginService_GetMetrics_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PluginService_GetManifest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetManifestRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PluginServiceServer).GetManifest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PluginService_GetManifest_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PluginServiceServer).GetManifest(ctx, req.(*GetManifestRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PluginService_ServiceDesc is the grpc.ServiceDesc for PluginService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -522,6 +562,10 @@ var PluginService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetMetrics",
 			Handler:    _PluginService_GetMetrics_Handler,
+		},
+		{
+			MethodName: "GetManifest",
+			Handler:    _PluginService_GetManifest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1665,6 +1665,447 @@ func (x *GetMetricsResponse) GetMetrics() map[string]string {
 	return nil
 }
 
+// HelmChart describes a Helm chart that can be installed by the Cosmonaut wizard.
+type HelmChart struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// repo_url is the Helm repository URL.
+	// Example: https://trinodb.github.io/charts
+	RepoUrl string `protobuf:"bytes,1,opt,name=repo_url,json=repoUrl,proto3" json:"repo_url,omitempty"`
+	// repo_name is the local alias for the Helm repo.
+	// Example: trino
+	RepoName string `protobuf:"bytes,2,opt,name=repo_name,json=repoName,proto3" json:"repo_name,omitempty"`
+	// chart_name is the chart identifier within the repo.
+	// Example: trino/trino
+	ChartName string `protobuf:"bytes,3,opt,name=chart_name,json=chartName,proto3" json:"chart_name,omitempty"`
+	// version is the chart version to install.
+	// Example: 0.13.0
+	Version string `protobuf:"bytes,4,opt,name=version,proto3" json:"version,omitempty"`
+	// values_template is a Go template for values.yaml.
+	// Placeholders like {{ .Param }} are filled by the wizard using ManifestParam values.
+	ValuesTemplate string `protobuf:"bytes,5,opt,name=values_template,json=valuesTemplate,proto3" json:"values_template,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *HelmChart) Reset() {
+	*x = HelmChart{}
+	mi := &file_plugin_v1_plugin_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HelmChart) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HelmChart) ProtoMessage() {}
+
+func (x *HelmChart) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_v1_plugin_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HelmChart.ProtoReflect.Descriptor instead.
+func (*HelmChart) Descriptor() ([]byte, []int) {
+	return file_plugin_v1_plugin_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *HelmChart) GetRepoUrl() string {
+	if x != nil {
+		return x.RepoUrl
+	}
+	return ""
+}
+
+func (x *HelmChart) GetRepoName() string {
+	if x != nil {
+		return x.RepoName
+	}
+	return ""
+}
+
+func (x *HelmChart) GetChartName() string {
+	if x != nil {
+		return x.ChartName
+	}
+	return ""
+}
+
+func (x *HelmChart) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *HelmChart) GetValuesTemplate() string {
+	if x != nil {
+		return x.ValuesTemplate
+	}
+	return ""
+}
+
+// Dependency describes something the plugin needs to exist in the cluster.
+// Each dependency is either already present (the operator points to it)
+// or can be installed by the Cosmonaut wizard.
+type Dependency struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// name is the unique identifier of this dependency.
+	// Examples: "spark-operator", "trino", "polaris", "flink-operator"
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// display_name is the human-readable name shown in the UI wizard.
+	DisplayName string `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	// description explains what this dependency is and why it is needed.
+	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// required indicates whether the plugin cannot function without this dependency.
+	Required bool `protobuf:"varint,4,opt,name=required,proto3" json:"required,omitempty"`
+	// installable indicates whether Cosmonaut can install this dependency.
+	// If false, the operator must provide it (e.g. a managed cloud service).
+	Installable bool `protobuf:"varint,5,opt,name=installable,proto3" json:"installable,omitempty"`
+	// chart is the Helm chart to install if installable=true and the operator
+	// chooses to install rather than point to an existing instance.
+	// Nil if installable=false.
+	Chart         *HelmChart `protobuf:"bytes,6,opt,name=chart,proto3" json:"chart,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Dependency) Reset() {
+	*x = Dependency{}
+	mi := &file_plugin_v1_plugin_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Dependency) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Dependency) ProtoMessage() {}
+
+func (x *Dependency) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_v1_plugin_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Dependency.ProtoReflect.Descriptor instead.
+func (*Dependency) Descriptor() ([]byte, []int) {
+	return file_plugin_v1_plugin_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *Dependency) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Dependency) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *Dependency) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *Dependency) GetRequired() bool {
+	if x != nil {
+		return x.Required
+	}
+	return false
+}
+
+func (x *Dependency) GetInstallable() bool {
+	if x != nil {
+		return x.Installable
+	}
+	return false
+}
+
+func (x *Dependency) GetChart() *HelmChart {
+	if x != nil {
+		return x.Chart
+	}
+	return nil
+}
+
+// ManifestParam is a parameter the wizard collects from the operator
+// to fill in the component_template and values_template placeholders.
+type ManifestParam struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// name is the parameter identifier used in templates.
+	// Example: "endpoint"
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// display_name is the human-readable label shown in the UI.
+	// Example: "Trino coordinator URL"
+	DisplayName string `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	// description explains what this parameter is for.
+	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// default_value is used when the operator does not provide a value.
+	DefaultValue string `protobuf:"bytes,4,opt,name=default_value,json=defaultValue,proto3" json:"default_value,omitempty"`
+	// required indicates whether the operator must provide this value.
+	Required bool `protobuf:"varint,5,opt,name=required,proto3" json:"required,omitempty"`
+	// secret indicates whether this value should be stored in Vault/K8s Secret.
+	// Example: passwords, tokens.
+	Secret        bool `protobuf:"varint,6,opt,name=secret,proto3" json:"secret,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ManifestParam) Reset() {
+	*x = ManifestParam{}
+	mi := &file_plugin_v1_plugin_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ManifestParam) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ManifestParam) ProtoMessage() {}
+
+func (x *ManifestParam) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_v1_plugin_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ManifestParam.ProtoReflect.Descriptor instead.
+func (*ManifestParam) Descriptor() ([]byte, []int) {
+	return file_plugin_v1_plugin_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ManifestParam) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ManifestParam) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *ManifestParam) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *ManifestParam) GetDefaultValue() string {
+	if x != nil {
+		return x.DefaultValue
+	}
+	return ""
+}
+
+func (x *ManifestParam) GetRequired() bool {
+	if x != nil {
+		return x.Required
+	}
+	return false
+}
+
+func (x *ManifestParam) GetSecret() bool {
+	if x != nil {
+		return x.Secret
+	}
+	return false
+}
+
+// PluginManifest describes everything needed to install and configure a plugin
+// and its dependencies. Used by the Cosmonaut UI wizard and CLI installer.
+type PluginManifest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// plugin_chart is the Helm chart for the plugin itself (e.g. cosmonaut-plugin-trino).
+	PluginChart *HelmChart `protobuf:"bytes,1,opt,name=plugin_chart,json=pluginChart,proto3" json:"plugin_chart,omitempty"`
+	// dependencies lists everything the plugin needs in the cluster.
+	// The wizard guides the operator through each one.
+	Dependencies []*Dependency `protobuf:"bytes,2,rep,name=dependencies,proto3" json:"dependencies,omitempty"`
+	// component_template is a Go template for the CosmoComponent YAML.
+	// Filled with ManifestParam values collected by the wizard.
+	// Example:
+	//
+	//	apiVersion: cosmonaut.galileostd.io/v1
+	//	kind: CosmoComponent
+	//	spec:
+	//	  endpoint: "http://{{ .endpoint }}:8080"
+	ComponentTemplate string `protobuf:"bytes,3,opt,name=component_template,json=componentTemplate,proto3" json:"component_template,omitempty"`
+	// params lists the parameters the wizard needs to collect from the operator.
+	Params        []*ManifestParam `protobuf:"bytes,4,rep,name=params,proto3" json:"params,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PluginManifest) Reset() {
+	*x = PluginManifest{}
+	mi := &file_plugin_v1_plugin_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PluginManifest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PluginManifest) ProtoMessage() {}
+
+func (x *PluginManifest) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_v1_plugin_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PluginManifest.ProtoReflect.Descriptor instead.
+func (*PluginManifest) Descriptor() ([]byte, []int) {
+	return file_plugin_v1_plugin_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *PluginManifest) GetPluginChart() *HelmChart {
+	if x != nil {
+		return x.PluginChart
+	}
+	return nil
+}
+
+func (x *PluginManifest) GetDependencies() []*Dependency {
+	if x != nil {
+		return x.Dependencies
+	}
+	return nil
+}
+
+func (x *PluginManifest) GetComponentTemplate() string {
+	if x != nil {
+		return x.ComponentTemplate
+	}
+	return ""
+}
+
+func (x *PluginManifest) GetParams() []*ManifestParam {
+	if x != nil {
+		return x.Params
+	}
+	return nil
+}
+
+type GetManifestRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetManifestRequest) Reset() {
+	*x = GetManifestRequest{}
+	mi := &file_plugin_v1_plugin_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetManifestRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetManifestRequest) ProtoMessage() {}
+
+func (x *GetManifestRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_v1_plugin_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetManifestRequest.ProtoReflect.Descriptor instead.
+func (*GetManifestRequest) Descriptor() ([]byte, []int) {
+	return file_plugin_v1_plugin_proto_rawDescGZIP(), []int{26}
+}
+
+type GetManifestResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Manifest      *PluginManifest        `protobuf:"bytes,1,opt,name=manifest,proto3" json:"manifest,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetManifestResponse) Reset() {
+	*x = GetManifestResponse{}
+	mi := &file_plugin_v1_plugin_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetManifestResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetManifestResponse) ProtoMessage() {}
+
+func (x *GetManifestResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_v1_plugin_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetManifestResponse.ProtoReflect.Descriptor instead.
+func (*GetManifestResponse) Descriptor() ([]byte, []int) {
+	return file_plugin_v1_plugin_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *GetManifestResponse) GetManifest() *PluginManifest {
+	if x != nil {
+		return x.Manifest
+	}
+	return nil
+}
+
 var File_plugin_v1_plugin_proto protoreflect.FileDescriptor
 
 const file_plugin_v1_plugin_proto_rawDesc = "" +
@@ -1779,7 +2220,37 @@ const file_plugin_v1_plugin_proto_rawDesc = "" +
 	"\ametrics\x18\x01 \x03(\v2*.plugin.v1.GetMetricsResponse.MetricsEntryR\ametrics\x1a:\n" +
 	"\fMetricsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01*\xc9\x02\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xa5\x01\n" +
+	"\tHelmChart\x12\x19\n" +
+	"\brepo_url\x18\x01 \x01(\tR\arepoUrl\x12\x1b\n" +
+	"\trepo_name\x18\x02 \x01(\tR\brepoName\x12\x1d\n" +
+	"\n" +
+	"chart_name\x18\x03 \x01(\tR\tchartName\x12\x18\n" +
+	"\aversion\x18\x04 \x01(\tR\aversion\x12'\n" +
+	"\x0fvalues_template\x18\x05 \x01(\tR\x0evaluesTemplate\"\xcf\x01\n" +
+	"\n" +
+	"Dependency\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12!\n" +
+	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1a\n" +
+	"\brequired\x18\x04 \x01(\bR\brequired\x12 \n" +
+	"\vinstallable\x18\x05 \x01(\bR\vinstallable\x12*\n" +
+	"\x05chart\x18\x06 \x01(\v2\x14.plugin.v1.HelmChartR\x05chart\"\xc1\x01\n" +
+	"\rManifestParam\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12!\n" +
+	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12#\n" +
+	"\rdefault_value\x18\x04 \x01(\tR\fdefaultValue\x12\x1a\n" +
+	"\brequired\x18\x05 \x01(\bR\brequired\x12\x16\n" +
+	"\x06secret\x18\x06 \x01(\bR\x06secret\"\xe5\x01\n" +
+	"\x0ePluginManifest\x127\n" +
+	"\fplugin_chart\x18\x01 \x01(\v2\x14.plugin.v1.HelmChartR\vpluginChart\x129\n" +
+	"\fdependencies\x18\x02 \x03(\v2\x15.plugin.v1.DependencyR\fdependencies\x12-\n" +
+	"\x12component_template\x18\x03 \x01(\tR\x11componentTemplate\x120\n" +
+	"\x06params\x18\x04 \x03(\v2\x18.plugin.v1.ManifestParamR\x06params\"\x14\n" +
+	"\x12GetManifestRequest\"L\n" +
+	"\x13GetManifestResponse\x125\n" +
+	"\bmanifest\x18\x01 \x01(\v2\x19.plugin.v1.PluginManifestR\bmanifest*\xc9\x02\n" +
 	"\n" +
 	"PluginType\x12\x1b\n" +
 	"\x17PLUGIN_TYPE_UNSPECIFIED\x10\x00\x12\x1c\n" +
@@ -1817,7 +2288,7 @@ const file_plugin_v1_plugin_proto_rawDesc = "" +
 	"\x13JOB_STATE_SUCCEEDED\x10\x03\x12\x14\n" +
 	"\x10JOB_STATE_FAILED\x10\x04\x12\x16\n" +
 	"\x12JOB_STATE_CANCELED\x10\x05\x12\x15\n" +
-	"\x11JOB_STATE_UNKNOWN\x10\x062\xc7\x05\n" +
+	"\x11JOB_STATE_UNKNOWN\x10\x062\x95\x06\n" +
 	"\rPluginService\x12C\n" +
 	"\bDescribe\x12\x1a.plugin.v1.DescribeRequest\x1a\x1b.plugin.v1.DescribeResponse\x12L\n" +
 	"\vHealthCheck\x12\x1d.plugin.v1.HealthCheckRequest\x1a\x1e.plugin.v1.HealthCheckResponse\x12@\n" +
@@ -1829,7 +2300,8 @@ const file_plugin_v1_plugin_proto_rawDesc = "" +
 	"\tSavepoint\x12\x1b.plugin.v1.SavepointRequest\x1a\x1c.plugin.v1.SavepointResponse\x12@\n" +
 	"\aRestore\x12\x19.plugin.v1.RestoreRequest\x1a\x1a.plugin.v1.RestoreResponse\x12I\n" +
 	"\n" +
-	"GetMetrics\x12\x1c.plugin.v1.GetMetricsRequest\x1a\x1d.plugin.v1.GetMetricsResponseB;Z9github.com/galileostd/cosmonaut-sdk/go/plugin/v1;pluginv1b\x06proto3"
+	"GetMetrics\x12\x1c.plugin.v1.GetMetricsRequest\x1a\x1d.plugin.v1.GetMetricsResponse\x12L\n" +
+	"\vGetManifest\x12\x1d.plugin.v1.GetManifestRequest\x1a\x1e.plugin.v1.GetManifestResponseB;Z9github.com/galileostd/cosmonaut-sdk/go/plugin/v1;pluginv1b\x06proto3"
 
 var (
 	file_plugin_v1_plugin_proto_rawDescOnce sync.Once
@@ -1844,7 +2316,7 @@ func file_plugin_v1_plugin_proto_rawDescGZIP() []byte {
 }
 
 var file_plugin_v1_plugin_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_plugin_v1_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_plugin_v1_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
 var file_plugin_v1_plugin_proto_goTypes = []any{
 	(PluginType)(0),             // 0: plugin.v1.PluginType
 	(ExecutionType)(0),          // 1: plugin.v1.ExecutionType
@@ -1873,30 +2345,36 @@ var file_plugin_v1_plugin_proto_goTypes = []any{
 	(*RestoreResponse)(nil),     // 24: plugin.v1.RestoreResponse
 	(*GetMetricsRequest)(nil),   // 25: plugin.v1.GetMetricsRequest
 	(*GetMetricsResponse)(nil),  // 26: plugin.v1.GetMetricsResponse
-	nil,                         // 27: plugin.v1.Component.ConfigEntry
-	nil,                         // 28: plugin.v1.HealthCheckResponse.DetailsEntry
-	nil,                         // 29: plugin.v1.ExecuteRequest.PayloadEntry
-	nil,                         // 30: plugin.v1.ExecuteResponse.ResultEntry
-	nil,                         // 31: plugin.v1.GetJobResponse.DetailsEntry
-	nil,                         // 32: plugin.v1.RestoreRequest.PayloadEntry
-	nil,                         // 33: plugin.v1.GetMetricsResponse.MetricsEntry
+	(*HelmChart)(nil),           // 27: plugin.v1.HelmChart
+	(*Dependency)(nil),          // 28: plugin.v1.Dependency
+	(*ManifestParam)(nil),       // 29: plugin.v1.ManifestParam
+	(*PluginManifest)(nil),      // 30: plugin.v1.PluginManifest
+	(*GetManifestRequest)(nil),  // 31: plugin.v1.GetManifestRequest
+	(*GetManifestResponse)(nil), // 32: plugin.v1.GetManifestResponse
+	nil,                         // 33: plugin.v1.Component.ConfigEntry
+	nil,                         // 34: plugin.v1.HealthCheckResponse.DetailsEntry
+	nil,                         // 35: plugin.v1.ExecuteRequest.PayloadEntry
+	nil,                         // 36: plugin.v1.ExecuteResponse.ResultEntry
+	nil,                         // 37: plugin.v1.GetJobResponse.DetailsEntry
+	nil,                         // 38: plugin.v1.RestoreRequest.PayloadEntry
+	nil,                         // 39: plugin.v1.GetMetricsResponse.MetricsEntry
 }
 var file_plugin_v1_plugin_proto_depIdxs = []int32{
-	27, // 0: plugin.v1.Component.config:type_name -> plugin.v1.Component.ConfigEntry
+	33, // 0: plugin.v1.Component.config:type_name -> plugin.v1.Component.ConfigEntry
 	0,  // 1: plugin.v1.DescribeResponse.plugin_type:type_name -> plugin.v1.PluginType
 	1,  // 2: plugin.v1.DescribeResponse.execution_type:type_name -> plugin.v1.ExecutionType
 	2,  // 3: plugin.v1.DescribeResponse.workload_type:type_name -> plugin.v1.WorkloadType
 	6,  // 4: plugin.v1.DescribeResponse.capabilities:type_name -> plugin.v1.Capability
 	5,  // 5: plugin.v1.HealthCheckRequest.component:type_name -> plugin.v1.Component
 	3,  // 6: plugin.v1.HealthCheckResponse.state:type_name -> plugin.v1.HealthState
-	28, // 7: plugin.v1.HealthCheckResponse.details:type_name -> plugin.v1.HealthCheckResponse.DetailsEntry
+	34, // 7: plugin.v1.HealthCheckResponse.details:type_name -> plugin.v1.HealthCheckResponse.DetailsEntry
 	5,  // 8: plugin.v1.ExecuteRequest.component:type_name -> plugin.v1.Component
-	29, // 9: plugin.v1.ExecuteRequest.payload:type_name -> plugin.v1.ExecuteRequest.PayloadEntry
+	35, // 9: plugin.v1.ExecuteRequest.payload:type_name -> plugin.v1.ExecuteRequest.PayloadEntry
 	4,  // 10: plugin.v1.ExecuteResponse.state:type_name -> plugin.v1.JobState
-	30, // 11: plugin.v1.ExecuteResponse.result:type_name -> plugin.v1.ExecuteResponse.ResultEntry
+	36, // 11: plugin.v1.ExecuteResponse.result:type_name -> plugin.v1.ExecuteResponse.ResultEntry
 	5,  // 12: plugin.v1.GetJobRequest.component:type_name -> plugin.v1.Component
 	4,  // 13: plugin.v1.GetJobResponse.state:type_name -> plugin.v1.JobState
-	31, // 14: plugin.v1.GetJobResponse.details:type_name -> plugin.v1.GetJobResponse.DetailsEntry
+	37, // 14: plugin.v1.GetJobResponse.details:type_name -> plugin.v1.GetJobResponse.DetailsEntry
 	5,  // 15: plugin.v1.ListJobsRequest.component:type_name -> plugin.v1.Component
 	4,  // 16: plugin.v1.ListJobsRequest.state_filter:type_name -> plugin.v1.JobState
 	14, // 17: plugin.v1.ListJobsResponse.jobs:type_name -> plugin.v1.GetJobResponse
@@ -1904,35 +2382,42 @@ var file_plugin_v1_plugin_proto_depIdxs = []int32{
 	5,  // 19: plugin.v1.GetLogsRequest.component:type_name -> plugin.v1.Component
 	5,  // 20: plugin.v1.SavepointRequest.component:type_name -> plugin.v1.Component
 	5,  // 21: plugin.v1.RestoreRequest.component:type_name -> plugin.v1.Component
-	32, // 22: plugin.v1.RestoreRequest.payload:type_name -> plugin.v1.RestoreRequest.PayloadEntry
+	38, // 22: plugin.v1.RestoreRequest.payload:type_name -> plugin.v1.RestoreRequest.PayloadEntry
 	4,  // 23: plugin.v1.RestoreResponse.state:type_name -> plugin.v1.JobState
 	5,  // 24: plugin.v1.GetMetricsRequest.component:type_name -> plugin.v1.Component
-	33, // 25: plugin.v1.GetMetricsResponse.metrics:type_name -> plugin.v1.GetMetricsResponse.MetricsEntry
-	7,  // 26: plugin.v1.PluginService.Describe:input_type -> plugin.v1.DescribeRequest
-	9,  // 27: plugin.v1.PluginService.HealthCheck:input_type -> plugin.v1.HealthCheckRequest
-	11, // 28: plugin.v1.PluginService.Execute:input_type -> plugin.v1.ExecuteRequest
-	13, // 29: plugin.v1.PluginService.GetJob:input_type -> plugin.v1.GetJobRequest
-	15, // 30: plugin.v1.PluginService.ListJobs:input_type -> plugin.v1.ListJobsRequest
-	17, // 31: plugin.v1.PluginService.CancelJob:input_type -> plugin.v1.CancelJobRequest
-	19, // 32: plugin.v1.PluginService.GetLogs:input_type -> plugin.v1.GetLogsRequest
-	21, // 33: plugin.v1.PluginService.Savepoint:input_type -> plugin.v1.SavepointRequest
-	23, // 34: plugin.v1.PluginService.Restore:input_type -> plugin.v1.RestoreRequest
-	25, // 35: plugin.v1.PluginService.GetMetrics:input_type -> plugin.v1.GetMetricsRequest
-	8,  // 36: plugin.v1.PluginService.Describe:output_type -> plugin.v1.DescribeResponse
-	10, // 37: plugin.v1.PluginService.HealthCheck:output_type -> plugin.v1.HealthCheckResponse
-	12, // 38: plugin.v1.PluginService.Execute:output_type -> plugin.v1.ExecuteResponse
-	14, // 39: plugin.v1.PluginService.GetJob:output_type -> plugin.v1.GetJobResponse
-	16, // 40: plugin.v1.PluginService.ListJobs:output_type -> plugin.v1.ListJobsResponse
-	18, // 41: plugin.v1.PluginService.CancelJob:output_type -> plugin.v1.CancelJobResponse
-	20, // 42: plugin.v1.PluginService.GetLogs:output_type -> plugin.v1.GetLogsResponse
-	22, // 43: plugin.v1.PluginService.Savepoint:output_type -> plugin.v1.SavepointResponse
-	24, // 44: plugin.v1.PluginService.Restore:output_type -> plugin.v1.RestoreResponse
-	26, // 45: plugin.v1.PluginService.GetMetrics:output_type -> plugin.v1.GetMetricsResponse
-	36, // [36:46] is the sub-list for method output_type
-	26, // [26:36] is the sub-list for method input_type
-	26, // [26:26] is the sub-list for extension type_name
-	26, // [26:26] is the sub-list for extension extendee
-	0,  // [0:26] is the sub-list for field type_name
+	39, // 25: plugin.v1.GetMetricsResponse.metrics:type_name -> plugin.v1.GetMetricsResponse.MetricsEntry
+	27, // 26: plugin.v1.Dependency.chart:type_name -> plugin.v1.HelmChart
+	27, // 27: plugin.v1.PluginManifest.plugin_chart:type_name -> plugin.v1.HelmChart
+	28, // 28: plugin.v1.PluginManifest.dependencies:type_name -> plugin.v1.Dependency
+	29, // 29: plugin.v1.PluginManifest.params:type_name -> plugin.v1.ManifestParam
+	30, // 30: plugin.v1.GetManifestResponse.manifest:type_name -> plugin.v1.PluginManifest
+	7,  // 31: plugin.v1.PluginService.Describe:input_type -> plugin.v1.DescribeRequest
+	9,  // 32: plugin.v1.PluginService.HealthCheck:input_type -> plugin.v1.HealthCheckRequest
+	11, // 33: plugin.v1.PluginService.Execute:input_type -> plugin.v1.ExecuteRequest
+	13, // 34: plugin.v1.PluginService.GetJob:input_type -> plugin.v1.GetJobRequest
+	15, // 35: plugin.v1.PluginService.ListJobs:input_type -> plugin.v1.ListJobsRequest
+	17, // 36: plugin.v1.PluginService.CancelJob:input_type -> plugin.v1.CancelJobRequest
+	19, // 37: plugin.v1.PluginService.GetLogs:input_type -> plugin.v1.GetLogsRequest
+	21, // 38: plugin.v1.PluginService.Savepoint:input_type -> plugin.v1.SavepointRequest
+	23, // 39: plugin.v1.PluginService.Restore:input_type -> plugin.v1.RestoreRequest
+	25, // 40: plugin.v1.PluginService.GetMetrics:input_type -> plugin.v1.GetMetricsRequest
+	31, // 41: plugin.v1.PluginService.GetManifest:input_type -> plugin.v1.GetManifestRequest
+	8,  // 42: plugin.v1.PluginService.Describe:output_type -> plugin.v1.DescribeResponse
+	10, // 43: plugin.v1.PluginService.HealthCheck:output_type -> plugin.v1.HealthCheckResponse
+	12, // 44: plugin.v1.PluginService.Execute:output_type -> plugin.v1.ExecuteResponse
+	14, // 45: plugin.v1.PluginService.GetJob:output_type -> plugin.v1.GetJobResponse
+	16, // 46: plugin.v1.PluginService.ListJobs:output_type -> plugin.v1.ListJobsResponse
+	18, // 47: plugin.v1.PluginService.CancelJob:output_type -> plugin.v1.CancelJobResponse
+	20, // 48: plugin.v1.PluginService.GetLogs:output_type -> plugin.v1.GetLogsResponse
+	22, // 49: plugin.v1.PluginService.Savepoint:output_type -> plugin.v1.SavepointResponse
+	24, // 50: plugin.v1.PluginService.Restore:output_type -> plugin.v1.RestoreResponse
+	26, // 51: plugin.v1.PluginService.GetMetrics:output_type -> plugin.v1.GetMetricsResponse
+	32, // 52: plugin.v1.PluginService.GetManifest:output_type -> plugin.v1.GetManifestResponse
+	42, // [42:53] is the sub-list for method output_type
+	31, // [31:42] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_plugin_v1_plugin_proto_init() }
@@ -1946,7 +2431,7 @@ func file_plugin_v1_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_plugin_v1_plugin_proto_rawDesc), len(file_plugin_v1_plugin_proto_rawDesc)),
 			NumEnums:      5,
-			NumMessages:   29,
+			NumMessages:   35,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

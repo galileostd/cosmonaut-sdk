@@ -288,6 +288,112 @@ message GetMetricsResponse {
   map<string, string> metrics = 1;
 }
 
+// ── Manifest messages ─────────────────────────────────────────────────────────
+
+// HelmChart describes a Helm chart that can be installed by the Cosmonaut wizard.
+message HelmChart {
+  // repo_url is the Helm repository URL.
+  // Example: https://trinodb.github.io/charts
+  string repo_url = 1;
+
+  // repo_name is the local alias for the Helm repo.
+  // Example: trino
+  string repo_name = 2;
+
+  // chart_name is the chart identifier within the repo.
+  // Example: trino/trino
+  string chart_name = 3;
+
+  // version is the chart version to install.
+  // Example: 0.13.0
+  string version = 4;
+
+  // values_template is a Go template for values.yaml.
+  // Placeholders like {{ .Param }} are filled by the wizard using ManifestParam values.
+  string values_template = 5;
+}
+
+// Dependency describes something the plugin needs to exist in the cluster.
+// Each dependency is either already present (the operator points to it)
+// or can be installed by the Cosmonaut wizard.
+message Dependency {
+  // name is the unique identifier of this dependency.
+  // Examples: "spark-operator", "trino", "polaris", "flink-operator"
+  string name = 1;
+
+  // display_name is the human-readable name shown in the UI wizard.
+  string display_name = 2;
+
+  // description explains what this dependency is and why it is needed.
+  string description = 3;
+
+  // required indicates whether the plugin cannot function without this dependency.
+  bool required = 4;
+
+  // installable indicates whether Cosmonaut can install this dependency.
+  // If false, the operator must provide it (e.g. a managed cloud service).
+  bool installable = 5;
+
+  // chart is the Helm chart to install if installable=true and the operator
+  // chooses to install rather than point to an existing instance.
+  // Nil if installable=false.
+  HelmChart chart = 6;
+}
+
+// ManifestParam is a parameter the wizard collects from the operator
+// to fill in the component_template and values_template placeholders.
+message ManifestParam {
+  // name is the parameter identifier used in templates.
+  // Example: "endpoint"
+  string name = 1;
+
+  // display_name is the human-readable label shown in the UI.
+  // Example: "Trino coordinator URL"
+  string display_name = 2;
+
+  // description explains what this parameter is for.
+  string description = 3;
+
+  // default_value is used when the operator does not provide a value.
+  string default_value = 4;
+
+  // required indicates whether the operator must provide this value.
+  bool required = 5;
+
+  // secret indicates whether this value should be stored in Vault/K8s Secret.
+  // Example: passwords, tokens.
+  bool secret = 6;
+}
+
+// PluginManifest describes everything needed to install and configure a plugin
+// and its dependencies. Used by the Cosmonaut UI wizard and CLI installer.
+message PluginManifest {
+  // plugin_chart is the Helm chart for the plugin itself (e.g. cosmonaut-plugin-trino).
+  HelmChart plugin_chart = 1;
+
+  // dependencies lists everything the plugin needs in the cluster.
+  // The wizard guides the operator through each one.
+  repeated Dependency dependencies = 2;
+
+  // component_template is a Go template for the CosmoComponent YAML.
+  // Filled with ManifestParam values collected by the wizard.
+  // Example:
+  //   apiVersion: cosmonaut.galileostd.io/v1
+  //   kind: CosmoComponent
+  //   spec:
+  //     endpoint: "http://{{ .endpoint }}:8080"
+  string component_template = 3;
+
+  // params lists the parameters the wizard needs to collect from the operator.
+  repeated ManifestParam params = 4;
+}
+
+message GetManifestRequest {}
+
+message GetManifestResponse {
+  PluginManifest manifest = 1;
+}
+
 // ── Service definitions ───────────────────────────────────────────────────────
 
 // PluginService is the core gRPC service every Cosmonaut plugin must implement.
@@ -342,4 +448,9 @@ service PluginService {
   // For streaming jobs: consumer lag, checkpoint duration, throughput.
   // For batch jobs: rows processed, bytes read/written.
   rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+
+  // GetManifest returns the plugin manifest — everything needed to install
+  // and configure this plugin and its dependencies.
+  // Called by the Cosmonaut UI wizard and CLI installer.
+  rpc GetManifest(GetManifestRequest) returns (GetManifestResponse);
 }
