@@ -104,10 +104,13 @@ func (c *Client) GetJob(ctx context.Context, component *pluginv1.Component, jobI
 }
 
 // ListJobs returns all jobs known to this component.
-func (c *Client) ListJobs(ctx context.Context, component *pluginv1.Component, stateFilter pluginv1.JobState, limit, offset int32) (*pluginv1.ListJobsResponse, error) {
+
+func (c *Client) ListJobs(ctx context.Context, component *pluginv1.Component, stateFilter pluginv1.JobState, jobName, jobGroup string, limit, offset int32) (*pluginv1.ListJobsResponse, error) {
 	return c.plugin.ListJobs(ctx, &pluginv1.ListJobsRequest{
 		Component:   component,
 		StateFilter: stateFilter,
+		JobName:     jobName,
+		JobGroup:    jobGroup,
 		Limit:       limit,
 		Offset:      offset,
 	})

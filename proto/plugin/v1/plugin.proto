@@ -190,25 +190,24 @@ message GetJobRequest {
   string    job_id    = 2;
 }
 
-message GetJobResponse {
-  string   job_id    = 1;
-  JobState state     = 2;
-  string   message   = 3;
+// Replaces GetJobResponse, ListJobsRequest, ListJobsResponse in plugin.proto (lines 193-219)
 
-  // Structured status details.
-  // For workloads: pod phase, restart count, node name.
-  // For queries: rows scanned, bytes processed, wall time ms.
-  map<string, string> details = 4;
+message GetJobResponse {
+  string job_id = 1;     // Unique execution ID. Spark: app name, Flink: deployment, Airflow: run_id
+  JobState state = 2;
+  string message = 3;
+  map<string, string> details = 4;  // Engine-specific: app_id, taskmanagers, dag_run_id, etc.
+  string job_name = 5;   // Stable logical name across executions
+  string job_group = 6;  // Optional grouping (DAG, pipeline, project)
 }
 
 message ListJobsRequest {
-  Component component   = 1;
-
-  // Optional filter by state.
-  JobState  state_filter = 2;
-
-  int32 limit  = 3;
+  Component component = 1;
+  JobState state_filter = 2;
+  int32 limit = 3;
   int32 offset = 4;
+  string job_name = 5;   // Filter by logical name
+  string job_group = 6;  // Filter by group
 }
 
 message ListJobsResponse {

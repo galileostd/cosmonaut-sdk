@@ -912,14 +912,13 @@ func (x *GetJobRequest) GetJobId() string {
 }
 
 type GetJobResponse struct {
-	state   protoimpl.MessageState `protogen:"open.v1"`
-	JobId   string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
-	State   JobState               `protobuf:"varint,2,opt,name=state,proto3,enum=plugin.v1.JobState" json:"state,omitempty"`
-	Message string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
-	// Structured status details.
-	// For workloads: pod phase, restart count, node name.
-	// For queries: rows scanned, bytes processed, wall time ms.
-	Details       map[string]string `protobuf:"bytes,4,rep,name=details,proto3" json:"details,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"` // Unique execution ID. Spark: app name, Flink: deployment, Airflow: run_id
+	State         JobState               `protobuf:"varint,2,opt,name=state,proto3,enum=plugin.v1.JobState" json:"state,omitempty"`
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	Details       map[string]string      `protobuf:"bytes,4,rep,name=details,proto3" json:"details,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // Engine-specific: app_id, taskmanagers, dag_run_id, etc.
+	JobName       string                 `protobuf:"bytes,5,opt,name=job_name,json=jobName,proto3" json:"job_name,omitempty"`                                                            // Stable logical name across executions
+	JobGroup      string                 `protobuf:"bytes,6,opt,name=job_group,json=jobGroup,proto3" json:"job_group,omitempty"`                                                         // Optional grouping (DAG, pipeline, project)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -982,13 +981,28 @@ func (x *GetJobResponse) GetDetails() map[string]string {
 	return nil
 }
 
+func (x *GetJobResponse) GetJobName() string {
+	if x != nil {
+		return x.JobName
+	}
+	return ""
+}
+
+func (x *GetJobResponse) GetJobGroup() string {
+	if x != nil {
+		return x.JobGroup
+	}
+	return ""
+}
+
 type ListJobsRequest struct {
-	state     protoimpl.MessageState `protogen:"open.v1"`
-	Component *Component             `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
-	// Optional filter by state.
-	StateFilter   JobState `protobuf:"varint,2,opt,name=state_filter,json=stateFilter,proto3,enum=plugin.v1.JobState" json:"state_filter,omitempty"`
-	Limit         int32    `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
-	Offset        int32    `protobuf:"varint,4,opt,name=offset,proto3" json:"offset,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Component     *Component             `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
+	StateFilter   JobState               `protobuf:"varint,2,opt,name=state_filter,json=stateFilter,proto3,enum=plugin.v1.JobState" json:"state_filter,omitempty"`
+	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	Offset        int32                  `protobuf:"varint,4,opt,name=offset,proto3" json:"offset,omitempty"`
+	JobName       string                 `protobuf:"bytes,5,opt,name=job_name,json=jobName,proto3" json:"job_name,omitempty"`    // Filter by logical name
+	JobGroup      string                 `protobuf:"bytes,6,opt,name=job_group,json=jobGroup,proto3" json:"job_group,omitempty"` // Filter by group
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1049,6 +1063,20 @@ func (x *ListJobsRequest) GetOffset() int32 {
 		return x.Offset
 	}
 	return 0
+}
+
+func (x *ListJobsRequest) GetJobName() string {
+	if x != nil {
+		return x.JobName
+	}
+	return ""
+}
+
+func (x *ListJobsRequest) GetJobGroup() string {
+	if x != nil {
+		return x.JobGroup
+	}
+	return ""
 }
 
 type ListJobsResponse struct {
@@ -2161,20 +2189,24 @@ const file_plugin_v1_plugin_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"Z\n" +
 	"\rGetJobRequest\x122\n" +
 	"\tcomponent\x18\x01 \x01(\v2\x14.plugin.v1.ComponentR\tcomponent\x12\x15\n" +
-	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"\xea\x01\n" +
+	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"\xa2\x02\n" +
 	"\x0eGetJobResponse\x12\x15\n" +
 	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12)\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x13.plugin.v1.JobStateR\x05state\x12\x18\n" +
 	"\amessage\x18\x03 \x01(\tR\amessage\x12@\n" +
-	"\adetails\x18\x04 \x03(\v2&.plugin.v1.GetJobResponse.DetailsEntryR\adetails\x1a:\n" +
+	"\adetails\x18\x04 \x03(\v2&.plugin.v1.GetJobResponse.DetailsEntryR\adetails\x12\x19\n" +
+	"\bjob_name\x18\x05 \x01(\tR\ajobName\x12\x1b\n" +
+	"\tjob_group\x18\x06 \x01(\tR\bjobGroup\x1a:\n" +
 	"\fDetailsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xab\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xe3\x01\n" +
 	"\x0fListJobsRequest\x122\n" +
 	"\tcomponent\x18\x01 \x01(\v2\x14.plugin.v1.ComponentR\tcomponent\x126\n" +
 	"\fstate_filter\x18\x02 \x01(\x0e2\x13.plugin.v1.JobStateR\vstateFilter\x12\x14\n" +
 	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x16\n" +
-	"\x06offset\x18\x04 \x01(\x05R\x06offset\"W\n" +
+	"\x06offset\x18\x04 \x01(\x05R\x06offset\x12\x19\n" +
+	"\bjob_name\x18\x05 \x01(\tR\ajobName\x12\x1b\n" +
+	"\tjob_group\x18\x06 \x01(\tR\bjobGroup\"W\n" +
 	"\x10ListJobsResponse\x12-\n" +
 	"\x04jobs\x18\x01 \x03(\v2\x19.plugin.v1.GetJobResponseR\x04jobs\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x05R\x05total\"]\n" +
